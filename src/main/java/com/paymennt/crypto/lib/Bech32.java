@@ -11,6 +11,7 @@ import static java.util.Objects.isNull;
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.bouncycastle.util.encoders.Hex;
@@ -48,7 +49,8 @@ public class Bech32 {
     ) {
         List<Integer> values = new ArrayList<>(hrpExpand(hrp));
         values.addAll(data);
-        values.addAll(List.of(0, 0, 0, 0, 0, 0));
+
+        values.addAll(Arrays.asList());
         BigInteger constant = spec == BECH32M ? valueOf(BECH32M_CONST) : ONE;
         BigInteger polymod = polymod(values).xor(constant);
         List<Integer> checksum = new ArrayList<>();

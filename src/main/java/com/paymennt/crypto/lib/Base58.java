@@ -3,6 +3,7 @@
  */
 package com.paymennt.crypto.lib;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.BigIntegers;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -17,18 +18,24 @@ import static java.util.Arrays.copyOfRange;
 
 /**
  * @author paymennt
- * 
  */
 public class Base58 {
-    
-    /**  */
+
+    /**
+     *
+     */
     private static final String BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-    /**  */
+    /**
+     *
+     */
     public static final char[] ALPHABET = BASE58_ALPHABET.toCharArray();
-    
-    /**  */
+
+    /**
+     *
+     */
     private static final int[] INDEXES = new int[128];
+
     static {
         Arrays.fill(INDEXES, -1);
         for (int i = 0; i < ALPHABET.length; i++) {
@@ -37,10 +44,8 @@ public class Base58 {
     }
 
     /**
-     * 
-     *
-     * @param key 
-     * @return 
+     * @param key
+     * @return
      */
     public static String encode(byte[] key) {
         int zeroCount = 0;
@@ -52,7 +57,7 @@ public class Base58 {
             }
         }
         BigInteger keyNumber = new BigInteger(1, key);
-        String prefix = "1".repeat(zeroCount);
+        String prefix = StringUtils.repeat("1", zeroCount);
         String result = "";
         while (keyNumber.compareTo(BigInteger.ZERO) > 0) {
             BigInteger[] divideAndRemainder = keyNumber.divideAndRemainder(valueOf(58));
@@ -64,10 +69,8 @@ public class Base58 {
     }
 
     /**
-     * 
-     *
-     * @param input 
-     * @return 
+     * @param input
+     * @return
      */
     public static byte[] decode(String input) {
         if (input.length() == 0) {
@@ -89,7 +92,7 @@ public class Base58 {
         // Convert base-58 digits to base-256 digits.
         byte[] decoded = new byte[input.length()];
         int outputStart = decoded.length;
-        for (int inputStart = zeros; inputStart < input58.length;) {
+        for (int inputStart = zeros; inputStart < input58.length; ) {
             decoded[--outputStart] = divmod(input58, inputStart, 58, 256);
             if (input58[inputStart] == 0) {
                 ++inputStart; // optimization - skip leading zeros
@@ -104,25 +107,27 @@ public class Base58 {
     }
 
     /**
-     * 
-     *
-     * @param key 
-     * @return 
+     * @param key
+     * @return
      */
     public static String encodeWithChecksum(byte[] key) {
-        byte[] checksum = Hash256.hash(key);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byteArrayOutputStream.writeBytes(key);
-        byteArrayOutputStream.writeBytes(new byte[] { checksum[0], checksum[1], checksum[2], checksum[3] });
-        return encode(byteArrayOutputStream.toByteArray());
+        String result = "";
+        try {
+            byte[] checksum = Hash256.hash(key);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            byteArrayOutputStream.write(key);
+            byteArrayOutputStream.write(new byte[]{checksum[0], checksum[1], checksum[2], checksum[3]});
+            result = encode(byteArrayOutputStream.toByteArray());
+        } catch (Exception e) {
+
+        }
+        return result;
     }
 
     /**
-     * 
-     *
-     * @param wif 
-     * @param compressed 
-     * @return 
+     * @param wif
+     * @param compressed
+     * @return
      */
     public static byte[] decodeWif(String wif, boolean compressed) {
         BigInteger number = ZERO;
@@ -140,10 +145,8 @@ public class Base58 {
     }
 
     /**
-     * 
-     *
-     * @param key 
-     * @return 
+     * @param key
+     * @return
      */
     public static byte[] decodeWithChecksum(String key) {
         BigInteger number = ZERO;
@@ -161,10 +164,8 @@ public class Base58 {
     }
 
     /**
-     * 
-     *
-     * @param key 
-     * @return 
+     * @param key
+     * @return
      */
     public static byte[] decodeExtendedKey(String key) {
         BigInteger number = ZERO;
@@ -177,54 +178,44 @@ public class Base58 {
     }
 
     /**
-     * 
-     *
-     * @param key 
-     * @return 
+     * @param key
+     * @return
      */
     public static String decodeWithChecksumToHex(String key) {
         return Hex.toHexString(decodeWithChecksum(key));
     }
 
     /**
-     * 
-     *
-     * @param combined 
-     * @param checksum 
-     * @return 
+     * @param combined
+     * @param checksum
+     * @return
      */
     private static boolean isValidAddress(byte[] combined, byte[] checksum) {
         return Arrays.equals(copyOfRange(Hash256.hash(copyOfRange(combined, 0, 21)), 0, 4), checksum);
     }
 
     /**
-     * 
-     *
-     * @param key 
-     * @return 
+     * @param key
+     * @return
      */
     public static String encodeFromHex(String key) {
         return encode(Hex.decodeStrict(key));
     }
 
     /**
-     * 
-     *
-     * @param key 
-     * @return 
+     * @param key
+     * @return
      */
     public static String encodeWithChecksumFromHex(String key) {
         return encodeWithChecksum(Hex.decodeStrict(key));
     }
 
     /**
-     * 
-     *
-     * @param number 
-     * @param firstDigit 
-     * @param base 
-     * @param divisor 
-     * @return 
+     * @param number
+     * @param firstDigit
+     * @param base
+     * @param divisor
+     * @return
      */
     private static byte divmod(byte[] number, int firstDigit, int base, int divisor) {
         // this is just long division which accounts for the base of the input digits
